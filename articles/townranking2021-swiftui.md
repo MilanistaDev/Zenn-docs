@@ -55,8 +55,8 @@ https://github.com/MilanistaDev/TownRanking2021
 * `HStack`，`VStack`，`ZStack` などの基本的な内容の復習
 * `@State`，`@Binding` などの値の扱い
 * `@ObservedObject`，`@Observable`，`@Published` を利用したデータの扱い
-* iOS 14 で追加された TabView の Page
-* 簡単な Animation
+* iOS 14 で追加された TabView の `PageTabViewStyle` を使ってみる
+* 簡単な Animation の復習
 
 ## 実装
 
@@ -90,7 +90,7 @@ https://github.com/MilanistaDev/TownRanking2021
 ![](https://storage.googleapis.com/zenn-user-upload/hca13alxbao2jfffimithodaedo6)
 
 `HStack` と `VStack` を組み合わせて作ります。
-借りると買うの状態は `Bool` で管理しますが，
+借りると買うの状態は `enum` で管理しますが，
 状態の変化によってボタンとバー，ランキングリストを追従させるために `@State` をつけます。
 
 少し考えなければならないのが，バーの Frame です。
@@ -99,14 +99,19 @@ https://github.com/MilanistaDev/TownRanking2021
 座標については `offset` を使って，借りる，買うの状態によってずらすことにしました。
 
 ```swift:ContentView.swift
+enum TabType: Int {
+    case rent
+    case buy
+}
+
 struct ContentView: View {
-    @State private var isRent = true
+    @State private var selection: TabType = .rent
 
     var body: some View {
         GeometryReader { geometry in
             NavigationView {
                 VStack {
-                    UpperTabView(isRent: $isRent, geometrySize: geometry.size)
+                    UpperTabView(selection: $selection, geometrySize: geometry.size)
                     Spacer()
                 }
                 .navigationBarTitle("住みたい街ランキング2021(首都圏)",
@@ -126,7 +131,7 @@ struct ContentView: View {
 ```swift:UpperTabView.swift
 struct UpperTabView: View {
     // ボタンのタップで状態を変える 親View状態を伝えるため @Binding をつけておく
-    @Binding var isRent: Bool
+    @Binding var selection: TabType
     let geometrySize: CGSize
 
     var body: some View {
@@ -134,29 +139,29 @@ struct UpperTabView: View {
             HStack(spacing: .zero) {
                 Button(action: {
                     // 借りて住みたいボタンタップで借りる状態に変更
-                    self.isRent = true
+                    self.selection = .rent
                 }, label: {
                     Text("借りて住みたい")
-                        .foregroundColor(self.isRent ?
+                        .foregroundColor(self.selection == .rent ?
                                             .rentOrange: .gray)
                          .font(.headline)
                 })
                 .frame(width: geometrySize.width / 2, height: 44.0)
                 Button(action: {
                     // 買って住みたいボタンタップで買う状態に変更
-                    self.isRent = false
+                    self.selection = .buy
                 }, label: {
                     Text("買って住みたい")
-                        .foregroundColor(self.isRent ?
+                        .foregroundColor(self.selection == .rent ?
                                             .gray: .buyBlue)
                         .font(.headline)
                 })
                 .frame(width: geometrySize.width / 2, height: 44.0)
             }
             Rectangle()
-                .fill(self.isRent ? Color.rentOrange: Color.buyBlue)
+                .fill(self.selection == .rent ? Color.rentOrange: Color.buyBlue)
                 .frame(width: geometrySize.width / 2, height: 2.0)
-                .offset(x: self.isRent ? .zero: geometrySize.width / 2, y: .zero)
+                .offset(x: self.selection == .rent ? .zero: geometrySize.width / 2, y: .zero)
         }
     }
 }
@@ -168,14 +173,17 @@ struct UpperTabView: View {
 バーをアニメーションさせたいなと思って調べて 2種類方法見つけたのですが，
 ここではひとつ目のものを採用しました。見つけたときちょっと感動しました。
 `withAnimation`[^1] を使うことでアニメーションさせながら
-`Bool` 値を切り替えられるというものです。下記のような感じです。
-0.3 秒かけて等速でアニメーションさせています。
+`Bool` 値を切り替えられたりするんですね。色々便利そう。
+
+今回は，`enum` の状態を0.3 秒かけて変更させました。
+こだわりはなかったので `linear`(等速)でアニメーションさせています。
+
 
 ```diff swift
 Button(action: {
 -    self.isRent = true
 +    withAnimation(.linear(duration: 0.3)) {
-+        self.isRent = true
++        self.selection = .rent
 +    }
 }, label: {
     // 略
@@ -184,22 +192,27 @@ Button(action: {
 Button(action: {
 -    self.isRent = false
 +    withAnimation(.linear(duration: 0.3)) {
-+        self.isRent = false
++        self.selection = .buy
 +    }
 }, label: {
     // 略
 })
 ```
 これでバーが状態を切り替えると遅れて追従してくれるようになりました🎉
-最終的には別のアニメーション実装を選択することになりましたがそれは後述します。
+この実装をしたときは感動がありましたが，最終的には・・・
+別のアニメーション実装を選択することになりましたがそれは後述します。
 
 GIF
 
 :::message
-* 状態切り替えの扱い方
+* `@State`，`@Binding` を利用した状態切り替えの扱い方
 * バーの座標切り替えは `offset` でずらせば実現できる！
-* `withAnimation` 便利！
+* `withAnimation` で任意の時間をかけて状態を変化させることができて便利！
 :::
+
+### 街ランキングリスト部分(ページング)
+
+
 
 ### 街ランキングリスト部分(リスト表示)
 
