@@ -358,7 +358,9 @@ https://www.homes.co.jp/cont/s_ranking/shutoken/
 * `@State`，`@Binding` などの値の扱い
 * `@ObservedObject`，`@Observable`，`@Published` を利用したデータの扱い
 * iOS 14 で追加された TabView の `PageTabViewStyle` を使ってみる
-* 簡単な Animation の復習(状態を変化に対して＆ビュー内のアニメーション可能な変更に対して)
+* 簡単な Animation の復習
+  - 状態を変化に対して (`withAnimation`)
+  - ビュー内のアニメーション可能な変更に対して(`animation`)
 
 ## 実装
 
@@ -598,8 +600,6 @@ struct ContentView: View {
 親 View(`ContentView`) に状態の変化を伝えられるようにしています。
 ここでのページングによる状態変化は，親 View 経由でタブ(`UpperTabView`)にも伝えられ，よってタブの状態切り替えも行われます。
 
-
-
 ここまでの実装の実行結果はこちらです。
 
 GIF
@@ -660,7 +660,6 @@ struct ContentPageView: View {
 }
 ```
 
-
 これで，借りて住みたい，買って住みたいボタンタップ時，
 左右にスワイプしてページングした際にも期待した動きになりました。
 
@@ -668,6 +667,7 @@ GIF
 
 
 ### 街ランキングリスト部分(リスト表示)
+
 
 
 
