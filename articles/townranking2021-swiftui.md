@@ -59,6 +59,7 @@ https://github.com/MilanistaDev/TownRanking2021
 https://www.homes.co.jp/cont/s_ranking/shutoken/
 
 使うデータの JSON ファイルはこちらです。
+`isRankUp` はランクアップしたかどうか，`rankFluctuation` は変化量です。
 (今思うとランク変化量だけでランクアップ/ダウン/キープ判断したほうがよかった🤔)
 
 :::details 使うデータの JSON ファイル
@@ -357,7 +358,7 @@ https://www.homes.co.jp/cont/s_ranking/shutoken/
 * `@State`，`@Binding` などの値の扱い
 * `@ObservedObject`，`@Observable`，`@Published` を利用したデータの扱い
 * iOS 14 で追加された TabView の `PageTabViewStyle` を使ってみる
-* 簡単な Animation の復習
+* 簡単な Animation の復習(状態を変化に対して＆ビュー内のアニメーション可能な変更に対して)
 
 ## 実装
 
