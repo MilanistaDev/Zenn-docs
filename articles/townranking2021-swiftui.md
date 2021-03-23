@@ -351,15 +351,16 @@ https://www.homes.co.jp/cont/s_ranking/shutoken/
     ]
 }
 ```
+:::
 
 ## 今回抑えたい内容
 
 * `HStack`，`VStack`，`ZStack` などの基本的な内容の復習
 * `@State`，`@Binding` などの値の扱い
 * `@ObservedObject`，`@Observable`，`@Published` を利用したデータの扱い
-* iOS 14 で追加された TabView の `PageTabViewStyle` を使ってみる
+* iOS 14 で追加された `TabView` の `PageTabViewStyle` を使ってみる
 * 簡単な Animation の復習
-  - 状態を変化に対して (`withAnimation`)
+  - 状態の変化に対して (`withAnimation`)
   - ビュー内のアニメーション可能な変更に対して(`animation`)
 
 ## 実装
@@ -414,7 +415,7 @@ struct ContentView: View {
     var body: some View {
         GeometryReader { geometry in
             NavigationView {
-                VStack {
+                VStack(spacing: .zero) {
                     UpperTabView(selection: $selection, geometrySize: geometry.size)
                     Spacer()
                 }
@@ -581,7 +582,7 @@ struct ContentView: View {
     var body: some View {
         GeometryReader { geometry in
             NavigationView {
-                VStack {
+                VStack(spacing: .zero) {
                     UpperTabView(selection: $selection, geometrySize: geometry.size)
                     // ここ追加 ↓
                     ContentPageView(selection: $selection)
@@ -594,7 +595,6 @@ struct ContentView: View {
 }
 ```
 :::
-
 
 左右にスワイプしてページングすることで状態が変わるので `@Binding` を使って
 親 View(`ContentView`) に状態の変化を伝えられるようにしています。
@@ -611,7 +611,7 @@ GIF
 
 理由は，ボタンタップ時にのみアニメーションするように書いているためです。
 よって状態の変化があるたびにアニメーションさせるために実装を見直します。
-`animation(_:)` モディファイアを使います。
+`animation(_:)`[^2] モディファイアを使います。
 ラップするビュー内のすべてのアニメーション化可能な変更に適用されます。
 
 `Button` の action で状態を切り替えていたのをやめて，
@@ -666,9 +666,132 @@ struct ContentPageView: View {
 GIF
 
 
+:::message
+* `TabView` の新しい `PageTabViewStyle` の使い方
+* `animation` はラップした View のアニメーション化可能な変更に対してのアニメーション
+:::
+
 ### 街ランキングリスト部分(リスト表示)
 
+#### 街ランキングリスト部分(LazyVGrid部分)
 
+次に借りて住みたい，買って住みたい，
+それぞれのランキング表示用のリストを作ります。
+
+`List` で `TableView` みたいな表示も可能だし，
+`ForEach` を使って View を繰り返し表示することでも実現可能です。
+せっかくなので iOS 14 から新しく使えるようになった `LazyVGrid` を使って
+カードUI のリストみたいにしてみます。
+
+`LazyVGrid`[^3] は UIKit での `UICollectionView` にあたります。
+SwiftUI 初期に欲しかったですよね。`LazyHGrid` もあります。
+Grid を組んで縦にスクロールさせる場合が `LazyVGrid`，
+Grid を組んで横にスクロールさせる場合が `LazyHGrid` のイメージです。
+
+> The grid is “lazy,” in that the grid view does not create items until they are needed.
+
+公式ドキュメントにある通り，表示に必要になるまで Grid View(セル)を生成しないです。
+要素数が多い場合でもパフォーマンスよくなる感じです。
+新しく登場した `LazyVStack`，`LazyHStack` も同じ考え方です。
+
+`LazyVGrid` では横のセル同士のマージンの調整は，`GridItem` で，
+次の列のセルとのマージンは `LazyVGrid` の方で設定します。
+`LazyHGrid` は逆になります。
+`GridItem` ではセルの幅や行ごとのセルの数など設定できますが，今回は最小の実装にします。
+次回あたりテーマにしてみようと思います。
+以下，Grid View は，セルとして表現します。
+
+`TownRankingListView.swift` を新たに生成し，
+こちらにランキングリストを実装していきます。
+この View がページングされるように書き換えます。
+ランキングリスト自体は同じクラスで作るので状態を引数として渡します。
+ついでに SafeArea も無視して一番下まで表示できるようにしておきます。
+
+```diff swift:ContentPageView.swift
+struct ContentPageView: View {
+
+    @Binding var selection: TabType
+
+    var body: some View {
+        TabView(selection: $selection) {
+-           Text("Rent")
++           TownRankingListView(selection: selection)
+                .tag(TabType.rent)
+-           Text("Buy")
++           TownRankingListView(selection: selection)
+                .tag(TabType.buy)
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+        .animation(.linear(duration: 0.3))
++       .edgesIgnoringSafeArea(.bottom)
+    }
+}
+```
+
+今回の仕様としては，1行で10列，それぞれのセルとのマージンは 10pt とします。
+左右のマージンは 16pt ずつですがマージンの設定は，
+訳ありで `ForEach` で View 生成の際に設定するようにします。
+
+一旦セルの代わりに `Rectangle` で代用します。
+借りるだったらオレンジ，買うだったらブルーで塗りつぶします。
+
+セルと左右上下端との余白，`UICollectionView` でいうところの
+`UICollectionViewFlowLayout` の `sectionInset` は，
+`.padding(.all, 16.0)` で表現できます。深く考えなくていいので楽かもしれないですね。
+
+```swift:TownRankingListView.swift
+struct TownRankingListView: View {
+
+    // このViewで変更は起きないので値渡しだけで良い
+    let selection: TabType
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem()], spacing: 0.0) {
+                ForEach(0 ..< 10) { index in
+                    Rectangle()
+                        .fill(selection == .rent ? Color.rentOrange: Color.buyBlue)
+                        .frame(height: 50)
+                        .cornerRadius(8.0)
+                        .padding(.bottom, 10.0)
+　　　　　　　　　　　　　　// ↑今回は擬似的に minimumLineSpacing 相当とする
+                       // 本来は LazyVGrid の spacing で設定する
+                }
+            }
+            .padding(.all, 16.0) // sectionInset相当
+        }
+        .background(Color.gridBackground)
+    }
+}
+```
+
+実行すると下記のようになります。
+
+GIF
+
+#### 街ランキングリスト部分(1~10位のセル実装)
+
+今までは `Rectangle` で代用していましたが，
+ランキングと街情報を表示するセルを実装していきます。
+シンプルイズベストということで，サイトと同じようなデザインにします。
+
+:::message
+仕様
+* 1位〜3位までは王冠付きのランク表示
+*
+:::
+
+
+
+:::message
+* `LazyVGrid` の使い方
+:::
+
+### 街ランキングリスト部分(11位以降の表示/非表示対応)
+
+### ランキングリスト用の街データモデルの実装
+
+### JSON のデータをリストに表示
 
 
 ## 実行結果
@@ -689,3 +812,5 @@ iOS 14 (SwiftUI 2)以上でやっと使えるレベルだと思ってるので
 ## 参考
 
 [^1]:https://developer.apple.com/documentation/swiftui/withanimation(_:_:)
+[^2]:https://developer.apple.com/documentation/swiftui/view/animation(_:)
+[^3]:https://developer.apple.com/documentation/swiftui/lazyvgrid
