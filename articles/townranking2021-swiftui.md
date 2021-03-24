@@ -356,9 +356,10 @@ https://www.homes.co.jp/cont/s_ranking/shutoken/
 ## 今回抑えたい内容
 
 * `HStack`，`VStack`，`ZStack` などの基本的な内容の復習
-* `@State`，`@Binding` などの値の扱い
-* `@ObservedObject`，`@Observable`，`@Published` を利用したデータの扱い
+* `@State`，`@Binding` などの値の扱いの復習
+* `@ObservedObject`，`@Observable`，`@Published` を利用したデータの扱いの復習
 * iOS 14 で追加された `TabView` の `PageTabViewStyle` を使ってみる
+* iOS 14 で追加された `LazyVGrid` を使ってみる
 * 簡単な Animation の復習
   - 状態の変化に対して (`withAnimation`)
   - ビュー内のアニメーション可能な変更に対して(`animation`)
@@ -667,7 +668,7 @@ GIF
 
 
 :::message
-* `TabView` の新しい `PageTabViewStyle` の使い方
+* `TabView` の新しい `PageTabViewStyle` の使い方を抑える
 * `animation` はラップした View のアニメーション化可能な変更に対してのアニメーション
 :::
 
@@ -774,20 +775,168 @@ GIF
 今までは `Rectangle` で代用していましたが，
 ランキングと街情報を表示するセルを実装していきます。
 シンプルイズベストということで，サイトと同じようなデザインにします。
+**私が仕様** なので画像は SFSymbols から探してガンガン使ってます。
 
 :::message
-仕様
+**仕様**
 * 1位〜3位までは王冠付きのランク表示
-*
+* 街名，ランク情報，最寄りの路線を表示する
+* 画像は SFSymbols から探す
 :::
 
+`TownRowView` というクラスで，`HStack` と `VStack` を使って実装します。
+ただ，1~3位の王冠のサイズを大きくしたり，順位変動部分の幅が可変だったりすることもあって，`ZStack` を使って領域分の幅を固定で取っています。
+また，現時点ではそれぞれの値は固定値としています。
+三項演算子ばかりで少し可読性悪いかもですね🤔
+↓ 複雑な割に大したことはないのでトグルにします。
 
+:::details TownRowView の実装
+
+```swift:TownRowView.swift
+import SwiftUI
+
+struct TownRowView: View {
+    let selection: TabType
+    let rank: Int
+    let isRankUp: Bool
+    let rankFluctuation: Int
+
+    var body: some View {
+        HStack(spacing: 16.0) {
+            ZStack {
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(width: 50.0, height: 50.0)
+                Image(systemName: rank < 4 ? "crown.fill": "circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: rank < 4 ? 50.0: 30.0, height: rank < 4 ? 50.0: 30.0)
+                    .offset(x: .zero, y: rank < 4 ? -5.0: .zero)
+                    .foregroundColor(selection == .rent ? .rentOrange: .buyBlue)
+                Text(rank.description)
+                    .font(rank < 4 ? .title2: .subheadline)
+                    .bold()
+                    .foregroundColor(.white)
+            }
+            ZStack {
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(width: 50.0, height: 50.0)
+                VStack(spacing: 4.0) {
+                    if !isRankUp && rankFluctuation == 0 {
+                        Image(systemName: "minus.circle.fill")
+                            .resizable()
+                            .frame(width: 20.0, height: 20.0)
+                            .foregroundColor(.gray)
+                        Text("キープ")
+                            .font(.footnote)
+                            .foregroundColor(.gray)
+                    } else {
+                        Image(systemName: isRankUp ? "arrow.up.circle.fill": "arrow.down.circle.fill")
+                            .resizable()
+                            .frame(width: 20.0, height: 20.0)
+                            .foregroundColor(isRankUp ? .red: .blue)
+                        Text(rankFluctuation.description + (isRankUp ? "アップ": "ダウン"))
+                            .font(.footnote)
+                            .foregroundColor(isRankUp ? .red: .blue)
+                    }
+                }
+            }
+            Text("浦安")
+                .font(.body)
+                .bold()
+            Spacer()
+            Text("東京メトロ東西線")
+                .frame(width: 90.0)
+                .lineLimit(nil)
+                .foregroundColor(.gray)
+                .font(.footnote)
+        }
+        .padding(.horizontal, 16.0)
+        .padding(.vertical, 10.0)
+        .background(Color.rowBackground)
+        .cornerRadius(8.0)
+        .shadow(color: Color.black.opacity(0.16), radius: 3.0, x: .zero, y: 3.0)
+    }
+}
+
+struct TownRowView_Previews: PreviewProvider {
+    static var previews: some View {
+        TownRowView(selection: .rent, rank: 1, isRankUp: true, rankFluctuation: 10)
+            .previewLayout(PreviewLayout.sizeThatFits)
+            .padding()
+        TownRowView(selection: .buy, rank: 4, isRankUp: false, rankFluctuation: 5)
+            .previewLayout(PreviewLayout.sizeThatFits)
+            .padding()
+        TownRowView(selection: .rent, rank: 10, isRankUp: false, rankFluctuation: 0)
+            .previewLayout(PreviewLayout.sizeThatFits)
+            .padding()
+    }
+}
+```
+:::
+
+こういう View を作るときはプレビューが便利ですよね。
+状態や値を変えて並べてみました。
+この View がランキングリストの各セルとして表示されます。
+
+![](https://storage.googleapis.com/zenn-user-upload/ntm6yjrj8uabg0wwohfijr3jxjn1 =600x)
+
+`TownRankingListView` のセルビュー生成部分を書き換えます。
+
+```diff swift:TownRankingListView.swift
+struct TownRankingListView: View {
+
+    let selection: TabType
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem()], spacing: 0.0) {
+                ForEach(0 ..< 10) { index in
+-                   Rectangle()
+-                       .fill(selection == .rent ? Color.rentOrange: Color.buyBlue)
+-                       .frame(height: 50)
+-                       .cornerRadius(8.0)
++                   TownRowView(selection: selection, rank: 1, isRankUp: true, rankFluctuation: 10)
+                        .padding(.bottom, 10.0)
+                }
+            }
+            .padding(.all, 16.0)
+        }
+        .background(Color.gridBackground)
+    }
+}
+```
+
+実行するとこんな感じになります。10個それぞれ表示されます。
+
+|借りて住みたい|買って住みたい|
+|:--:|:--:|
+|![](https://storage.googleapis.com/zenn-user-upload/3gmdl6sl9myvi2b2d4opdm3xkru2)|![](https://storage.googleapis.com/zenn-user-upload/vw9ppeqvnthuypyzu32cpkavbsdl)|
 
 :::message
-* `LazyVGrid` の使い方
+* `LazyVGrid` の使い方を抑える
 :::
 
 ### 街ランキングリスト部分(11位以降の表示/非表示対応)
+
+参考にした住みたい街ランキングサイトを見ると，
+11位以降はボタンタップで表示・非表示が切り替えられるので，
+同じようにアコーディオンチックな実装にしてみます。
+
+:::message
+**仕様**
+* 11〜20位はボタンのタップで表示・非表示を切り替える
+* 11〜20位はマージンなしのリスト表示
+* 表示はランク，ランク増減，街名，最寄り路線
+:::
+
+まずは，11〜20位用のセルの View を実装してみます。
+1〜10位ように先ほど実装した `TownRowView` を使おうと思ったのですが，
+表示させる項目は同じではあるのですが，三項演算子も多く，
+さらに複雑になるのもよくないと思ったので新規で作ります。
+
+
 
 ### ランキングリスト用の街データモデルの実装
 
