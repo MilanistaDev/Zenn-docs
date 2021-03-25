@@ -924,26 +924,124 @@ struct TownRankingListView: View {
 11位以降はボタンタップで表示・非表示が切り替えられるので，
 同じようにアコーディオンチックな実装にしてみます。
 
+11〜20位の仕様は下記のようにしてみました。
+
 :::message
 **仕様**
 * 11〜20位はボタンのタップで表示・非表示を切り替える
 * 11〜20位はマージンなしのリスト表示
 * 表示はランク，ランク増減，街名，最寄り路線
+* ランク部分は全て丸で背景色は色は少し薄めのオレンジ・ブルーに
+* 利用可能路線情報は街名の下に表示
 :::
 
+#### 街ランキングリスト部分(11~20位のセル実装)
+
 まずは，11〜20位用のセルの View を実装してみます。
-1〜10位ように先ほど実装した `TownRowView` を使おうと思ったのですが，
+1〜10位用に先ほど実装した `TownRowView` を使おうと思ったのですが，
 表示させる項目は同じではあるのですが，三項演算子も多く，
-さらに複雑になるのもよくないと思ったので新規で作ります。
+レイアウトも異なるためさらに複雑にな理想だったので新規で作ります。
+`SubTownRowView` とします。
+
+:::details 11〜20位のセル実装 SubTownRowView
+```swift:
+struct SubTownRowView: View {
+    let selection: TabType
+    let rank: Int
+    let isRankUp: Bool
+    let rankFluctuation: Int
+
+    var body: some View {
+        HStack(spacing: 16.0) {
+            ZStack {
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(width: 50.0, height: 50.0)
+                Image(systemName: "circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30.0, height: 30.0)
+                    .foregroundColor(selection == .rent ? .subRentOrange: .subBuyBlue)
+                Text(rank.description)
+                    .font(.subheadline)
+                    .bold()
+                    .foregroundColor(.white)
+            }
+            ZStack {
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(width: 50.0, height: 50.0)
+                VStack(spacing: 4.0) {
+                    if !isRankUp && rankFluctuation == 0 {
+                        Image(systemName: "minus.circle.fill")
+                            .resizable()
+                            .frame(width: 20.0, height: 20.0)
+                            .foregroundColor(.gray)
+                        Text("キープ")
+                            .font(.footnote)
+                            .foregroundColor(.gray)
+                    } else {
+                        Image(systemName: isRankUp ? "arrow.up.circle.fill": "arrow.down.circle.fill")
+                            .resizable()
+                            .frame(width: 20.0, height: 20.0)
+                            .foregroundColor(isRankUp ? .red: .blue)
+                        Text(rankFluctuation.description + (isRankUp ? "アップ": "ダウン"))
+                            .font(.footnote)
+                            .foregroundColor(isRankUp ? .red: .blue)
+                    }
+                }
+            }
+            VStack(alignment: .leading, spacing: 4.0) {
+                Text("妙典")
+                    .font(.subheadline)
+                    .bold()
+                Text("東京メトロ東西線")
+                    .lineLimit(nil)
+                    .foregroundColor(.gray)
+                    .font(.footnote)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 16.0)
+        .padding(.vertical, 4.0)
+        .background(Color.rowBackground)
+    }
+}
+
+struct SubTownRowView_Previews: PreviewProvider {
+    static var previews: some View {
+        SubTownRowView(selection: .rent, rank: 11, isRankUp: true, rankFluctuation: 10)
+            .previewLayout(PreviewLayout.sizeThatFits)
+            .padding()
+        SubTownRowView(selection: .buy, rank: 20, isRankUp: false, rankFluctuation: 5)
+            .previewLayout(PreviewLayout.sizeThatFits)
+            .padding()
+        SubTownRowView(selection: .rent, rank: 20, isRankUp: false, rankFluctuation: 0)
+            .previewLayout(PreviewLayout.sizeThatFits)
+            .padding()
+    }
+}
+```
+:::
+
+先ほどと同じように状態や値を変えて並べてみました。
+この View がランキングリスト 11〜20位の各セルとして表示されます。
+
+![](https://storage.googleapis.com/zenn-user-upload/bjxb56giemoihsevnn8dbm9vek6f = 600x)
+
+#### 街ランキングリスト部分(11~20位のセル表示)
+
+11〜20位のセルもランキングリストに表示させてみます。
 
 
+
+
+#### 街ランキングリスト部分(表示・非表示の実現)
 
 ### ランキングリスト用の街データモデルの実装
 
 ### JSON のデータをリストに表示
 
-
-## 実行結果
 
 ## Future Work
 
