@@ -1075,6 +1075,143 @@ struct TownRankingListView: View {
 
 #### 街ランキングリスト部分(表示・非表示の実現)
 
+最後に11〜20位のランキングの表示・非表示を実現させていきます。
+11〜20位のランキングの表示，非表示という状態を表現するために
+`isExpanded` という変数を定義し，`isExpanded` が `true` の場合のみ
+11〜20位のランキングリストを表示させるように実装します。
+
+```diff swift:TownRankingListView.swift
+struct TownRankingListView: View {
+
+    let selection: TabType
++   @State private var isExpanded = false
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem()], spacing: 0.0) {
+                Section {
+                    ForEach(0 ..< 10) { index in
+                        TownRowView(selection: selection, rank: 1, isRankUp: true, rankFluctuation: 10)
+                            .padding(.bottom, 10.0)
+                    }
+                }
++               if isExpanded {
+                    Section {
+                        ForEach(0 ..< 10) { index in
+                            SubTownRowView(selection: selection, rank: 11, isRankUp: true, rankFluctuation: 30)
+                            Divider()
+                        }
+                    }
+                }
++           }
+            .padding(.all, 16.0)
+        }
+        .background(Color.gridBackground)
+    }
+}
+```
+
+`isExpanded` の状態切り替えは，`Button` のアクションに任せます。
+`ExpandButtonView` を新規で実装します。
+`isExpanded` の値によってボタンのタイトルを変更し，アロー画像の向きを変更させます。
+
+:::details ExpandButtonView の実装
+
+```swift:ExpandButtonView.swift
+struct ExpandButtonView: View {
+
+    let selection: TabType
+    // このViewでの状態変化をランキングリストのViewに伝える
+    @Binding var isExpanded: Bool
+
+    var body: some View {
+        Button {
+            // ボタンのタップアクションで状態を切り替え
+            self.isExpanded.toggle()
+        } label: {
+            HStack {
+                Text(isExpanded ? "閉じる": "11位以降を見る")
+                    .font(.subheadline)
+                    .bold()
+                    .foregroundColor(.white)
+                Image(systemName: isExpanded ? "chevron.up": "chevron.down")
+                    .foregroundColor(.white)
+            }
+            .frame(height: 52.0)
+            .frame(minWidth: .zero, maxWidth: .infinity)
+            .background(selection == .rent ? Color.rentOrange: Color.buyBlue)
+            .cornerRadius(8.0)
+        }
+    }
+}
+
+struct ExpandButtonView_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            ExpandButtonView(selection: .rent, isExpanded: .constant(false))
+                .previewLayout(PreviewLayout.sizeThatFits)
+                .padding()
+                .background(Color(.systemBackground))
+            ExpandButtonView(selection: .rent, isExpanded: .constant(true))
+                .previewLayout(PreviewLayout.sizeThatFits)
+                .padding()
+                .background(Color(.systemBackground))
+        }
+    }
+}
+```
+:::
+
+`isExpanded` の値によって下記のようなビューの違いになります。
+また，`selection` の値によって背景色が変わります。
+
+![](https://storage.googleapis.com/zenn-user-upload/7yisxv8b0vv0lxweh3zi5ehsrv44 =600x)
+
+最後にランキングリストの一番下にこのボタンが表示されるように実装追加します。
+一番下の SafeArea の高さ分ボタンの下に追加してやると見栄えが良くなります。
+SafeArea の高さの取得方法は何種類かあると思いますが，
+`ContentView` で `geometry.safeAreaInsets.bottom` で取れるので値渡しで持ってきました。
+
+```diff swift:TownRankingListView.swift
+struct TownRankingListView: View {
+
+    let selection: TabType
++   let safeAreaBottomHeight: CGFloat
+    @State private var isExpanded = false
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem()], spacing: 0.0) {
+                Section {
+                    ForEach(0 ..< 10) { index in
+                        TownRowView(selection: selection, rank: 1, isRankUp: true, rankFluctuation: 10)
+                            .padding(.bottom, 10.0)
+                    }
+                }
+                if isExpanded {
+                    Section {
+                        ForEach(0 ..< 10) { index in
+                            SubTownRowView(selection: selection, rank: 11, isRankUp: true, rankFluctuation: 30)
+                            Divider()
+                        }
+                    }
+                }
+            }
+            .padding(.all, 16.0)
++           ExpandButtonView(selection: selection, isExpanded: $isExpanded)
++               .padding(.horizontal, 16.0)
++               .padding(.bottom, 16.0 + safeAreaBottomHeight)
+        }
+        .background(Color.gridBackground)
+    }
+}
+```
+
+実行してみると動きは実現できています。
+あとはランキングデータを取得して表示させるだけです。
+
+GIF
+
 ### ランキングリスト用の街データモデルの実装
 
 ### JSON のデータをリストに表示
