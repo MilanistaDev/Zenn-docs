@@ -1214,7 +1214,27 @@ GIF
 
 ### ランキングリスト用の街データモデルの実装
 
+住みたい街ランキング用の JSON を元にデータを扱うモデルを実装します。
+複雑ではないです。今回は `Encodable` の方はいらないです。
+
+```swift:
+struct TownRankingData: Decodable {
+    var townRankingsForRent: [TownInfo]
+    var townRankingsForBuy: [TownInfo]
+}
+
+struct TownInfo: Decodable, Hashable {
+    var rank: Int
+    var townName: String
+    var isRankUp: Bool
+    var rankFluctuation: Int
+    var availableLine: String
+}
+```
+
 ### JSON のデータをリストに表示
+
+
 
 
 ## Future Work
