@@ -941,7 +941,7 @@ struct TownRankingListView: View {
 1〜10位用に先ほど実装した `TownRowView` を使おうと思ったのですが，
 表示させる項目は同じではあるのですが，三項演算子も多く，
 レイアウトも異なるためさらに複雑にな理想だったので新規で作ります。
-`SubTownRowView` とします。
+`SubTownRowView` とします。角丸設定も不要です。
 
 :::details 11〜20位のセル実装 SubTownRowView
 ```swift:
@@ -1027,14 +1027,51 @@ struct SubTownRowView_Previews: PreviewProvider {
 先ほどと同じように状態や値を変えて並べてみました。
 この View がランキングリスト 11〜20位の各セルとして表示されます。
 
-![](https://storage.googleapis.com/zenn-user-upload/bjxb56giemoihsevnn8dbm9vek6f = 600x)
+![](https://storage.googleapis.com/zenn-user-upload/bjxb56giemoihsevnn8dbm9vek6f =600x)
 
 #### 街ランキングリスト部分(11~20位のセル表示)
 
 11〜20位のセルもランキングリストに表示させてみます。
+リスト表示させたいので，`Section` でそれぞれ異なるブロックにします。
+`Divider()` を使ってセルとセルとの間にラインを引いてリスト表示っぽくしています。
+11〜20位のレイアウトために，`LazyVGrid` の `spacing` を 0 にしていた感じです。
+(`ForEach` の範囲は 0〜9 までになっていますが あとで 11〜20位の要素用に変更されます。)
 
+```diff swift:TownRankingListView.swift
+struct TownRankingListView: View {
 
+    let selection: TabType
 
+    var body: some View {
+        ScrollView {
+            // 11〜20位のレイアウトためにこのspacingを0にしていた
+            LazyVGrid(columns: [GridItem()], spacing: 0.0) {
++               Section {
+                    ForEach(0 ..< 10) { index in
+                        TownRowView(selection: selection, rank: 1, isRankUp: true, rankFluctuation: 10)
+                            .padding(.bottom, 10.0)
+                    }
++               }
++               Section {
++                   ForEach(0 ..< 10) { index in
++                       SubTownRowView(selection: selection, rank: 11, isRankUp: true, rankFluctuation: 30)
++                       Divider()
++                   }
++               }
+            }
+            .padding(.all, 16.0)
+        }
+        .background(Color.gridBackground)
+    }
+}
+```
+
+実行するとこんな感じになります。さらに下に 10個それぞれ表示されます。
+あと少し。
+
+|借りて住みたい|買って住みたい|
+|:--:|:--:|
+|![](https://storage.googleapis.com/zenn-user-upload/jvgf33fjktdyj6x56f6pd2vxpuql)|![](https://storage.googleapis.com/zenn-user-upload/fcwe6r8aytn500ntqtafe4sw7r1n)|
 
 #### 街ランキングリスト部分(表示・非表示の実現)
 
