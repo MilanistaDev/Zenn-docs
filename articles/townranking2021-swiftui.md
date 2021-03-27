@@ -1234,7 +1234,84 @@ struct TownInfo: Decodable, Hashable {
 
 ### JSON のデータをリストに表示
 
+先述したとおり今回の記事ではローカルの JSON ファイルからデータを取得します。
+`TownRankingFetcher` クラスを作って，結果をコールバックさせます。
 
+```swift:TownRankingFetcher.swift
+class TownRankingFetcher {
+    func fetchTownRanking(completion: @escaping (Result<TownRankingData, Error>) -> Void) {
+        guard let path = Bundle.main.path(forResource: "TownRanking2021", ofType: "json") else { return }
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: path))
+            let fetchedData = try JSONDecoder().decode(TownRankingData.self, from: data)
+            DispatchQueue.main.async {
+                completion(.success(fetchedData))
+            }
+        } catch  {
+            DispatchQueue.main.async {
+                completion(.failure(error))
+            }
+        }
+    }
+}
+```
+
+:::details APIのリンク用意して URLSession など使って通信する場合
+```swift:TownRankingFetcher.swift
+class TownRankingFetcher {
+    func fetchTownRanking(completion: @escaping (Result<TownRankingData, Error>) -> Void) {
+        URLSession.shared.dataTask(with: URL(string: APIのリンク)!) { (data, response, error) in
+            guard let data = data else { return }
+            let decoder: JSONDecoder = JSONDecoder()
+            do {
+                let fetchedData = try decoder.decode(TownRankingData.self, from: data)
+                DispatchQueue.main.async {
+                    completion(.success(fetchedData))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
+            }
+        }.resume()
+    }
+}
+```
+:::
+
+外部API を叩いてリスト表示するサンプル実装は
+Qiita に以前書いたのでよかったらご覧ください🙇‍♂️
+https://qiita.com/MilanistaDev/items/64dca8c9d5099a19529e
+
+次に ViewModel を実装します。
+`ObservableObject` に準拠させて，変更があった際に通知可能にします。
+データのモデルのプロパティに `@Published` 属性を付加して監視対象とします。
+`townRankingData` の初期化として借りて住みたい，買って住みたい，
+それぞれのランキングデータの配列を空にしておいて JSON からデータ取得後に
+変更を通知できるようになる感じです(簡単にいうと)。
+
+```
+class TownRankingViewModel: ObservableObject {
+    @Published var townRankingData =  TownRankingData(townRankingsForRent: [], townRankingsForBuy: [])
+
+    let fetcher = TownRankingFetcher()
+
+    init() {
+        fetcher.fetchTownRanking { result in
+            switch result {
+            case .success(let townRankingData):
+                // 取得したランキングデータを代入して変更をこのクラスを監視しているViewに通知
+                self.townRankingData = townRankingData
+            case .failure(let error):
+                debugPrint(error.localizedDescription)
+            }
+        }
+    }
+}
+```
+
+データの変化を受け取って View を更新する処理を実装します。
+今回の親 View の `ContentView` で ViewModel を定義して，
 
 
 ## Future Work
