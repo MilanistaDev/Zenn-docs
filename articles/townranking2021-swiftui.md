@@ -556,7 +556,7 @@ TabView {
 
 ```swift:ContentPageView.swift
 struct ContentPageView: View {
-    // 左右にページングすることで状態が変わるので @Binding を使う
+    // ページングすることで状態が変わるので @Binding を使う
     @Binding var selection: TabType
 
     var body: some View {
@@ -1223,7 +1223,7 @@ struct TownRankingData: Decodable {
     var townRankingsForBuy: [TownInfo]
 }
 
-struct TownInfo: Decodable, Hashable {
+struct TownInfo: Decodable {
     var rank: Int
     var townName: String
     var isRankUp: Bool
@@ -1235,7 +1235,7 @@ struct TownInfo: Decodable, Hashable {
 ### JSON のデータをリストに表示
 
 先述したとおり今回の記事ではローカルの JSON ファイルからデータを取得します。
-`TownRankingFetcher` クラスを作って，結果をコールバックさせます。
+`TownRankingFetcher` クラスを作って，取得結果をコールバックさせます。
 
 ```swift:TownRankingFetcher.swift
 class TownRankingFetcher {
@@ -1290,7 +1290,7 @@ https://qiita.com/MilanistaDev/items/64dca8c9d5099a19529e
 それぞれのランキングデータの配列を空にしておいて JSON からデータ取得後に
 変更を通知できるようになる感じです(簡単にいうと)。
 
-```
+```swift:TownRankingViewModel.swift
 class TownRankingViewModel: ObservableObject {
     @Published var townRankingData =  TownRankingData(townRankingsForRent: [], townRankingsForBuy: [])
 
@@ -1312,17 +1312,202 @@ class TownRankingViewModel: ObservableObject {
 
 データの変化を受け取って View を更新する処理を実装します。
 今回の親 View の `ContentView` で ViewModel を定義して，
+`@ObservedObject` 属性を付与します。
+これでランキングデータ取得時に変更を受け取ることができます。
+`TownRankingViewModel` のランキングデータモデル `townRankingData` を
+子の View に渡していきます。
 
+```diff swift:ContentView.swift
+struct ContentView: View {
+    @State private var selection: TabType = .rent
++   @ObservedObject private var townRankingVM = TownRankingViewModel()
 
-## Future Work
+    var body: some View {
+        GeometryReader { geometry in
+            NavigationView {
+                VStack(spacing: .zero) {
+                    UpperTabView(selection: $selection,
+                                 geometrySize: geometry.size)
+                    ContentPageView(selection: $selection,
++                                   townRankingData: townRankingVM.townRankingData,                                 
+                                    safeAreaBottomHeight: geometry.safeAreaInsets.bottom)
+                }
+                .edgesIgnoringSafeArea(.bottom)
+                .navigationBarTitle("住みたい街ランキング2021(首都圏)",
+                                    displayMode: .inline)
+            }
+        }
+    }
+}
+```
+
+`ContentPageView` に `TownRankingData` 型で定数を宣言して値渡しできるようにします。
+今回は，子Viewでデータの変更は行わないのでただの値渡しです。
+ランキングリストの `TownRankingListView` にも値渡しします。
+今回は，借りて住みたい，買って住みたいランキングデータのモデルをそれぞれ渡します。
+
+```diff swift:
+struct ContentPageView: View {
+    // ページングすることで状態が変わるので @Binding を使う
+    @Binding var selection: TabType
+    // 子Viewでデータの変更は行わないので値渡しで良い
++   let townRankingData: TownRankingData
+    let safeAreaBottomHeight: CGFloat
+
+    var body: some View {
+        TabView(selection: $selection) {
+            TownRankingListView(selection: selection,
++                               townInfo: townRankingData.townRankingsForRent,
+                                safeAreaBottomHeight: safeAreaBottomHeight)
+                .tag(TabType.rent)
+            TownRankingListView(selection: selection,
++                               townInfo: townRankingData.townRankingsForBuy,
+                                safeAreaBottomHeight: safeAreaBottomHeight)
+                .tag(TabType.buy)
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+        .animation(.linear(duration: 0.3))
+    }
+}
+```
+
+ランキングリストの `TownRankingListView` で宣言するのは，
+`[TownInfo]` 型の定数です。今回は 20要素分あるので `min関数` を使って，
+1〜10位，11〜20位の範囲の要素のデータを表示できるように `ForEach` の範囲を調整しています。
+静的なデータをセル View に渡していたところを各街データ(`TownInfo`)に変更しています。
+`index` 使わないのに書いてたのはこのためでした。
+最下部のボタンは，データ取得後に表示させるために条件文を追加しています。
+
+```diff swift:
+struct TownRankingListView: View {
+
+    let selection: TabType
++   let townInfo: [TownInfo]
+    let safeAreaBottomHeight: CGFloat
+    @State private var isExpanded = false
+
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem()], spacing: 0.0) {
+                Section {
+-                   ForEach(0 ..< 10) { index in
+-                       TownRowView(selection: selection, rank: 1, isRankUp: true, rankFluctuation: 10)
+-                           .padding(.bottom, 10.0)
+-                   }
++                   ForEach(0 ..< min(townInfo.count, 10)) { index in
++                       TownRowView(selection: selection,
++                                   townInfo: townInfo[index])
++                           .padding(.bottom, 10.0)
++                   }
+                }
+                if isExpanded {
+                    Section {
+-                       ForEach(0 ..< 10) { index in
+-                           SubTownRowView(selection: selection, rank: 11, isRankUp: true, rankFluctuation: 30)
+-                           Divider()
+-                       }
++                       ForEach(min(townInfo.count, 10) ..< townInfo.count) { index in
++                           SubTownRowView(selection: selection,
++                                          townInfo: townInfo[index])
++                           Divider()
++                       }
+                    }
+                }
+            }
+            .padding(.all, 16.0)
+            // データ取得前は表示させない
++           if !townInfo.isEmpty {
+                ExpandButtonView(selection: selection, isExpanded: $isExpanded)
+                    .padding(.horizontal, 16.0)
+                    .padding(.bottom, 16.0 + safeAreaBottomHeight)
++           }
+        }
+        .background(Color.gridBackground)
+    }
+}
+```
+
+最後にセルのViewのデータの値渡しです。
+`let townInfo: TownInfo` を定義して値を受けられるようにします。
+`TownInfo` に街・ランク情報が入ってくるのでそのデータを参照するように書き換えます。
+ここでは省略します。
+
+実行してみます。
+
+**これで終わりだと思った・・・**
+
+借りて住みたい側の 1〜10位の表示が出ません。むむむ🤔
+ボタンは表示されているし，11〜20位のデータもあるので全部取れているはずです。
+
+GIF
+
+検索してみたところ，下記記事にも同様の内容の記載がありました。
+https://hack.nikkei.com/blog/advent20201201/
+
+> TabViewのContentViewを静的な固定値ではなく、APIから動的に取得する場合、再レンダリングが正常に働かない挙動を確認しています。 TabViewにidメソッドを適用して、コンテンツに変化が起きたら強制的に再レンダリングを行わせることで対応できます。
+
+iOS 15 で解消されればいいなぁ。
+ということで同様の処理をしてみました。
+
+まずはモデルの構造体を `Hashable` に準拠させます。
+
+```swift:TownInfo.swift
+// Hashable に準拠させる
+struct TownInfo: Decodable, Hashable {
+    var rank: Int
+    var townName: String
+    var isRankUp: Bool
+    var rankFluctuation: Int
+    var availableLine: String
+}
+```
+
+次に `TabView` に `id` メソッドを適用させます。
+
+```diff swift:ContentPageView.swift
+struct ContentPageView: View {
+
+    @Binding var selection: TabType
+    let townRankingData: TownRankingData
+    let safeAreaBottomHeight: CGFloat
+
+    var body: some View {
+        TabView(selection: $selection) {
+            TownRankingListView(selection: selection,
+                                townInfo: townRankingData.townRankingsForRent,
+                                safeAreaBottomHeight: safeAreaBottomHeight)
+                .tag(TabType.rent)
+            TownRankingListView(selection: selection,
+                                townInfo: townRankingData.townRankingsForBuy,
+                                safeAreaBottomHeight: safeAreaBottomHeight)
+                .tag(TabType.buy)
+        }
+        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+        .animation(.linear(duration: 0.3))
++       // APIで取得しても画面更新されないため
++       .id(townRankingData.townRankingsForRent.hashValue)
+    }
+}
+```
+
+上記修正を追加したらちゃんと 1〜10位も表示されました。
+
+GIF
 
 ## おわりに
+
+今回は，UIのイメージと使ってみたい新要素だけを持って実装進めましたが，
+意外と作れるものだなぁが7割，これどう実装するんだ？3割くらいで楽しかったです。
+幅広く復習できたのでまぁまぁ満足してます。
 
 SwiftUI は業務でまださわれない分，個人開発で！という感じで付き合っています。
 今作ってる新規アプリは，UIKit でまず画面単位で作って SwiftUI で作れそうなら
 `UIHostingController` を利用して採用という形でやっています。
 `ContainerView` などで部分的に作れる場合も考慮はしています。
-iOS 14 (SwiftUI 2)以上でやっと使えるレベルだと思ってるので
+
+UIKit じゃなくても実現できることが増えてきたので，
+普段から触っておくのが良いなと思いました。
+ただ，iOS 14 (SwiftUI 2)以上でやっと使えるレベルだと思ってるので
 ストレスなく開発できるようになるまで正直我慢ですね。
 
 ご覧いただきありがとうございました。
