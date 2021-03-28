@@ -1,6 +1,6 @@
 ---
-title: "住みたい街ランキング2021年版が発表されたのでSwiftUIでトレースしてみた!!"
-emoji: "👋"
+title: "住みたい街ランキング2021年版が発表されたのでSwiftUIでサンプルアプリ作ってみた!!"
+emoji: "📱"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["iOS", "SwiftUI", "Swift"]
 published: false
@@ -35,9 +35,9 @@ LIFULL HOME’S が毎年算出している住みたい街ランキングを題�
 私はサクッと Google App Script で JSON を返すように外部 API を作りましたが
 GitHub のサンプルはローカルの JSON を読み込むようにしています。
 
-完成したものはこちらです。
+完成したものはこちらです。(通信はしないので Loading は出ないです)
 
-GIF
+![TR21_00](https://user-images.githubusercontent.com/8732417/112757083-1b3a6900-9023-11eb-9e1d-4e447e7ac24f.gif)
 
 ## 開発環境
 
@@ -357,7 +357,7 @@ https://www.homes.co.jp/cont/s_ranking/shutoken/
 
 * `HStack`，`VStack`，`ZStack` などの基本的な内容の復習
 * `@State`，`@Binding` などの値の扱いの復習
-* `@ObservedObject`，`@Observable`，`@Published` を利用したデータの扱いの復習
+* `@ObservedObject`，`ObservableObject`，`@Published` を利用したデータの扱いの復習
 * iOS 14 で追加された `TabView` の `PageTabViewStyle` を使ってみる
 * iOS 14 で追加された `LazyVGrid` を使ってみる
 * 簡単な Animation の復習
@@ -508,7 +508,7 @@ Button(action: {
 この実装をしたときは感動がありましたが，最終的には・・・
 別のアニメーション実装を選択することになりましたがそれは後述します。
 
-GIF
+![TR21_01](https://user-images.githubusercontent.com/8732417/112757191-9ef45580-9023-11eb-84c3-b1537d0950af.gif)
 
 :::message
 * `@State`，`@Binding` を利用した状態切り替えの扱い方
@@ -531,11 +531,11 @@ iOS 14 から `PageTabViewStyle` が追加されました。
 そうするとページングするとそれぞれの `View` が表示されます。
 
 `indexDisplayMode` は `automatic`，`always`，`never` の3種類があります。
-これは，UIKit での `UIPageControl`，つまり現在の index を示す UI です。
+これは，UIKit での `UIPageControl`，つまり現在の index を示す UI の表示モードです。
 今回は不要なので `never` を使います。
 下記のようにとても楽に書けます😂
 
-```swift
+```swift:HogeView.swift
 TabView {
     Text("Page A")
     Text("Page B")
@@ -603,7 +603,8 @@ struct ContentView: View {
 
 ここまでの実装の実行結果はこちらです。
 
-GIF
+![TR21_02](https://user-images.githubusercontent.com/8732417/112757186-9bf96500-9023-11eb-9cc0-e16d64b7976f.gif)
+
 
 仕様的には問題ないですが，ちょっと惜しい部分があります。
 上部のタブのボタンをタップして状態を切り替える際は，
@@ -664,8 +665,7 @@ struct ContentPageView: View {
 これで，借りて住みたい，買って住みたいボタンタップ時，
 左右にスワイプしてページングした際にも期待した動きになりました。
 
-GIF
-
+![TR21_03](https://user-images.githubusercontent.com/8732417/112757185-9b60ce80-9023-11eb-9d78-0cdcfbf6ee17.gif)
 
 :::message
 * `TabView` の新しい `PageTabViewStyle` の使い方を抑える
@@ -768,7 +768,7 @@ struct TownRankingListView: View {
 
 実行すると下記のようになります。
 
-GIF
+![TR21_04](https://user-images.githubusercontent.com/8732417/112757184-99970b00-9023-11eb-8ec9-2dfebd150fee.gif)
 
 #### 街ランキングリスト部分(1~10位のセル実装)
 
@@ -1210,7 +1210,7 @@ struct TownRankingListView: View {
 実行してみると動きは実現できています。
 あとはランキングデータを取得して表示させるだけです。
 
-GIF
+![TR21_05](https://user-images.githubusercontent.com/8732417/112757168-90a63980-9023-11eb-98d3-9e7e654db66b.gif)
 
 ### ランキングリスト用の街データモデルの実装
 
@@ -1439,7 +1439,7 @@ struct TownRankingListView: View {
 借りて住みたい側の 1〜10位の表示が出ません。むむむ🤔
 ボタンは表示されているし，11〜20位のデータもあるので全部取れているはずです。
 
-GIF
+![TR21_06](https://user-images.githubusercontent.com/8732417/112757164-8b48ef00-9023-11eb-9bcd-3b510f53081b.gif)
 
 検索してみたところ，下記記事にも同様の内容の記載がありました。
 https://hack.nikkei.com/blog/advent20201201/
@@ -1484,15 +1484,21 @@ struct ContentPageView: View {
         }
         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
         .animation(.linear(duration: 0.3))
-+       // APIで取得しても画面更新されないため
++       // 画面更新されないため
 +       .id(townRankingData.townRankingsForRent.hashValue)
     }
 }
 ```
 
-上記修正を追加したらちゃんと 1〜10位も表示されました。
+上記修正を追加したらちゃんと 1〜10位も表示されました🎉
 
-GIF
+![TR21_07](https://user-images.githubusercontent.com/8732417/112757154-79674c00-9023-11eb-9025-ea5846f83a9f.gif)
+
+今回，ダークモード対応については触れなかったのですが，
+SwiftUI の Preview 機能を使ってちょこちょこ確認してました。
+Dynamic Type なども含め，アクセシビリティも意識しながら実装できるのいいですよね。
+
+![](https://storage.googleapis.com/zenn-user-upload/b8ywadsdmyvyegqkvqfqn3xuorvr)
 
 ## おわりに
 
