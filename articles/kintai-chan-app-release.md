@@ -24,7 +24,7 @@ Apple Watch で数回画面をタップするだけで代わりにできたら�
 ということで 日報ちゃんというアプリ名で
 2018年の Qiita Advent Calendar で実装してみたのが最初で，
 2019年の夏の合宿で SwiftUI で作ってみようと取りかかり，
-2019年の Qiita Advent Calendar で実装して記事描きました。
+2019年の Qiita Advent Calendar で実装して記事書きました。
 
 ![KintaichanAppMovie](https://user-images.githubusercontent.com/8732417/126958044-b1de1545-d1b4-4516-a3c4-e83ac38f6ce2.gif)
 
@@ -33,8 +33,8 @@ watchOS 6 から iOS アプリは不要となり，
 よりシンプルなアプリが作れるようになりました。
 機能的にも勤怠ちゃんはシンプルなので Apple Watch 専用アプリはよく合っています。
 
-今回は，watchOS 7 以降をサポート，
-つまり SwiftUI 2 で作り直した感じです。
+今回は，コンセプトとデザインは据え置きなものの，
+watchOS 7 以降をサポート，つまり SwiftUI 2 でスクラッチで開発した感じです。
 SwiftUI 初版はまだまだ融通が効かないことも
 多かったので気持ちよく実装はできました。
 
@@ -70,7 +70,7 @@ M1 の MacBook Air だと可能みたくよくわからない。
 
 App Store Connect にログインして，
 マイ App から新規アプリを作るのですが，
-Watch App はプラットフォームの選択肢にない。。。
+Watch App はプラットフォームの選択肢にない🤔
 
 ![](https://storage.googleapis.com/zenn-user-upload/54af14af75859f8142b27b51.png =400x)
 
@@ -81,9 +81,9 @@ Watch App はプラットフォームの選択肢にない。。。
 
 でも疑問は残る。Watch App 専用なので
 iOS 側のスクリーンショットはもちろんない。
-ここスクショのアップデート必要なのだろうか？
+ここスクショのアップデート必要なのだろうか？🤔
 
-![](https://storage.googleapis.com/zenn-user-upload/0a3273f9c89546808a506333.png)
+![](https://storage.googleapis.com/zenn-user-upload/0a3273f9c89546808a506333.png =400x)
 
 結果的に不要で大丈夫でした。
 代わりに Apple Watch の項目部分を記入しました。
