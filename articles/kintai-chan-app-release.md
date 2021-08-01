@@ -38,6 +38,11 @@ watchOS 7 以降をサポート，つまり SwiftUI 2 でスクラッチで開�
 SwiftUI 初版はまだまだ融通が効かないことも
 多かったので気持ちよく実装はできました。
 
+今回はサポートページは GitHub にリポジトリ作って README を代わりにしました。
+
+https://github.com/MilanistaDev/Kintai-chan-support
+
+
 良かったら下記の記事たちもご覧ください。
 
 https://qiita.com/MilanistaDev/items/b97cab77d6add96c96dc
@@ -60,6 +65,16 @@ View のコードはネストが深くなりがちでした。
 詰め込みすぎず分けられる内容は画面を分けました。
 同様に画面のスクショを使いながら機能を説明する形はできなかった。
 iPhone 側で補足することもできないのは辛いなと思いました。
+
+### Link が使えない
+
+iOS アプリなら `TextView` などで
+文字列を修飾してテキストリンクにしたり，
+単純にボタンやセルのタップアクションなどで
+`SFSafariViewController` でリンクを開かせたり，
+Safari などの外部ブラウザに遷移できるのですが，
+watchOS ではできないのでモヤモヤしました。
+ペアリングしている iPhone 側で開けたりしないのかなぁ🤔
 
 ### 実機インストールが不安定
 
@@ -96,7 +111,7 @@ iOS 側のスクリーンショットはもちろんない。
 
 ![](https://storage.googleapis.com/zenn-user-upload/3e26a250984ff3c9b9a42b9d.png)
 
-### Slack投稿になるまでの説明に苦心
+### Slack投稿可能になるまでの説明に苦心
 
 これは申請時まで全く考慮できていなかったことで，
 Webhook URLをどう共有するか迷いました。
