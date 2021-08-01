@@ -99,6 +99,35 @@ Webhook URLをどう共有するか迷いました。
 なので Slackを新規アカウントで作り，
 投稿用のチャンネルを作って Webhook URL を生成して
 **App Reviewに関する情報** のメモ部分に書いておきました。
-申請できるのにここの説明で結構時間食いました。
+申請できるのにここの説明で結構時間使いました。
 
+## Appleレビュー
 
+レビュー状況履歴は下記になります。
+1回 Metadata Rejected 食らってます。
+
+![](https://storage.googleapis.com/zenn-user-upload/038fb33d8cdb9d3575d3fcb3.png =400x)
+
+コードが悪いとかではなくて情報もっと求むというやつでした。
+一番よくある系のリジェクトですね。
+
+> Guideline 2.1 - Information Needed
+>
+> We're looking forward to completing our review of your app. Before we can continue, we need a video that demonstrates the current version, 1.0.0, in use on a physical iOS device, showcasing all the features and functionality of your app.
+>
+> Keep these requirements in mind as you make your demo video: 
+>
+>- Only use footage of your app running on a physical iOS device, not on a simulator. 
+>- Make sure the video clearly documents all relevant app features, services, and user permission requests.
+>- You can use a screen recorder to capture footage of your app in use. 
+
+実機で機能がわかるようなデモ動画を用意して教えてね。
+ってことで，平日だったこともありここで数日時間かかってしまった。
+スクリーン動画撮れる言うたって Apple Watch じゃ無理ですやん😇
+
+YouTuber 時代以来になる撮影＆動画編集しました。
+収録は iPhone 12 Pro Max，編集は iMovie でサクッとやりました。
+動画収録中に広角・通常に切り替えられたので便利になったものですね。
+これで OK もらえたのでこれくらい雑でもいいんだなって知見になりました。
+
+https://youtu.be/ATqg5lRV47Q
