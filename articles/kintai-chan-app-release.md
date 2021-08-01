@@ -2,13 +2,13 @@
 title: "SwiftUIで実装したApple Watch専用アプリをリリースしました"
 emoji: "⌚️"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: ["Swift", "SwiftUI", "AppleWatch", "watchOS"]
+topics: ["Swift", "SwiftUI", "AppleWatch", "watchOS", "IndependentwatchOSApps"]
 published: false
 ---
 
 ## はじめに
 
-タイトル通り Apple Watch 専用アプリをリリースしたので
+タイトル通り 7/31 に Apple Watch 専用アプリをリリースしたので
 実装や App Store Connect 周りで思ったことを書いていきます。
 
 ## 作ったアプリ
@@ -140,3 +140,18 @@ YouTuber 時代以来になる撮影＆動画編集しました。
 興味があったらご覧ください。
 
 https://youtu.be/ATqg5lRV47Q
+
+## おわりに
+
+Apple Watch 専用アプリをリリースしてみたのでその所感等を書きました。
+ひと通りリリース作業も楽しめたしリリースしてよかったと思いました。
+
+iOS アプリはちょっと(気が重い)なぁっていう方は
+watchOS で簡単なアプリ作ってリリースまで体験してみるのも良さそうです。
+
+コロナ禍もあってフィールドテストが
+まだいまいちできていないアプリ(UIKit + SwiftUI 混合)も作っているので
+iOS 15 正規版登場の頃までにリリースできたらいいなぁと思ってます。
+
+長文，乱文になりましたが
+ご覧いただき，ありがとうございました。
