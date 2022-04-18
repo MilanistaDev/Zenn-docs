@@ -1,5 +1,5 @@
 {
-  "name": "Zenn",
+  "name": "zenn",
   "version": "1.0.0",
   "description": "* [📘 How to use](https://zenn.dev/zenn/articles/zenn-cli-guide) * [📘 Markdown guide](https://zenn.dev/zenn/articles/markdown-guide)",
   "main": "index.js",
@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "zenn-cli": "^0.1.74"
+    "zenn-cli": "^0.1.109"
   },
   "repository": {
     "type": "git",
