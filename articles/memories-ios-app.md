@@ -3,7 +3,7 @@ title: "乗車記録をつけるiOSアプリをリリースしました"
 emoji: "🚇"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["iOS", "Swift", "SwiftUI", "アプリ"]
-published: false
+published: true
 ---
 
 ## 作ったアプリ
