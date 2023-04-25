@@ -2,7 +2,7 @@
 title: "複数ターゲットのプロジェクトに R.swift 7 系を Swift Package Manager で導入"
 emoji: "📱"
 type: "tech" # tech: 技術記事 / idea: アイデア
-topics: []
+topics: ["Swift", "Rswift", "iOS", "watchOS"]
 published: false
 ---
 
