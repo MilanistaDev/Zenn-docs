@@ -3,7 +3,7 @@ title: "【SwiftUI】iOS 16.0 で PageTabViewStyle の TabView でクラッシ�
 emoji: "🐛"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["iOS", "SwiftUI", "TabView", "PageTabViewStyle"]
-published: false
+published: true
 ---
 
 ## はじめに
