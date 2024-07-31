@@ -27,16 +27,64 @@ published: false
 
 https://github.com/MilanistaDev/PagingWithButtonActionsOnly
 
+* iOS 16 以上
+* SwiftUI
+* MVVM
+
+動作イメージは下記の GIF のような感じ。
+
+
+
 ### 仕様
 
+* ページ切り替えボタンを画面の上部の左右端に表示する
+* ページ切り替えボタンはページ切り替えができない場合非表示(最初と最後のpage)
+* ページングは左右に動くアニメーションありで実現する
+* ドラッグやスワイプによるページングはできないようにする(ページ切り替えボタンのみ)
+* コンテンツは適当な色を着色したビューを縦に並べ，スクロールできるものとする
 
+### コンテンツデータ
+
+API などで非同期での取得を想定するが，
+今回は下記の構造体を使ったサンプルデータを使う。
+
+```swift:Contents.swift
+struct Contents {
+    /// ページ名(ボタンに表示されるテキスト)
+    let pageName: String
+    /// ボタンに表示されるテキストカラー
+    let textColor: String
+    /// ボタンの背景色
+    let backColor: String
+    /// 縦に並ぶコンテンツをページ数分格納した配列
+    let columns: [Color]
+}
+
+let sampleContents: [Contents] = [
+    Contents(
+        pageName: "PAGE1",
+        textColor: "#000000",
+        backColor: "#f39700",
+        columns: [.cyan, .mint, .teal]
+    ),
+    Contents(
+        pageName: "PAGE2",
+        textColor: "#FFFFFF",
+        backColor: "#E60012",
+        columns: [.red, .purple, .yellow]
+    ),
+    Contents(
+        pageName: "PAGE3",
+        textColor: "#FFFFFF",
+        backColor: "#9b7cb6",
+        columns: [.pink, .orange, .blue]
+    )
+]
+```
+
+## 実装
 
 ## おわりに
-
-SwiftUI はすんなりできるか，結構頑張らないといけないかのどちらかが多い気がする。
-それを埋めるために毎年新規 API がリリースされるが，
-恩恵にあやかるには OS のバージョンによる場合分けをせざるを得なくなる。
-
 
 ## 参考
 
