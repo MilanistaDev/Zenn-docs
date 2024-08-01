@@ -8,6 +8,8 @@ published: false
 
 ## はじめに
 
+今回も TabView 周りの小ネタです。
+
 ある案件で，縦に画像が並ぶコンテンツ画面を拡張して
 一時的に特別なコンテンツも表示したいという話をいただき，
 ページングさせる形式で
@@ -83,6 +85,71 @@ let sampleContents: [Contents] = [
 ```
 
 ## 実装
+
+ViewModel 側でデータ取得の処理を行う。
+非同期を意識して 3s の遅延を入れた。
+待つ間 `isLoading` が `true` になる。
+
+```swift:TabPagingViewModel.swift
+import Foundation
+
+final class TabPagingViewModel: ObservableObject {
+    @Published var contents: [Contents] = []
+    @Published var isLoading = false
+
+    func onAppear() {
+        Task {
+            isLoading = true
+            defer {
+                isLoading = false
+            }
+
+            do {
+                // wait 3s
+                try await Task.sleep(nanoseconds: 3_000_000_000)
+                contents = sampleContents
+
+            } catch { }
+        }
+    }
+}
+```
+
+View 側の実装は下記のような感じ。
+一旦通常通りスワイプでページングできるようにしておく。
+
+```swift:TabPagingView.swift
+import SwiftUI
+
+struct TabPagingView: View {
+    @StateObject private var viewModel = TabPagingViewModel()
+    @State private var selection = 0
+
+    var body: some View {
+        TabView(selection: $selection) {
+            ForEach(viewModel.contents.indices, id: \.self) { index in
+                ContentView(data: viewModel.contents[index].columns)
+                    .tag(index)
+                    .ignoresSafeArea()
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .edgesIgnoringSafeArea(.top)
+        .overlay {
+            if viewModel.isLoading {
+                ProgressView()
+            }
+        }
+        .onAppear {
+            viewModel.onAppear()
+        }
+    }
+}
+```
+
+次にページ切り替え用のボタンの実装をします。
+
+
 
 ## おわりに
 
