@@ -148,7 +148,81 @@ struct TabPagingView: View {
 ```
 
 次にページ切り替え用のボタンの実装をします。
+左右のボタンの設定のための enum を定義しておきます。
 
+```swift:PageSwitchingButtonType.swift
+enum PageSwitchingButtonType: CaseIterable {
+    case left
+    case right
+
+    // ボタンタップ時に追加するIndex値
+    var addIndex: Int {
+        switch self {
+        case .left:
+            return -1
+
+        case .right:
+            return 1
+        }
+    }
+
+    // 左右のボタンのシェブロンのアイコン名(SFSymbols)
+    var edgeIcon: String {
+        switch self {
+        case .left:
+            return "chevron.left"
+
+        case .right:
+            return "chevron.right"
+        }
+    }
+
+    // 左端のマージン
+    var leadingMargin: CGFloat {
+        switch self {
+        case .left:
+            return 4.0
+
+        case .right:
+            return 8.0
+        }
+    }
+
+    // 右端のマージン
+    var trailingMargin: CGFloat {
+        switch self {
+        case .left:
+            return 8.0
+
+        case .right:
+            return 4.0
+        }
+    }
+
+    // 左端の角丸の設定
+    var leadingCornerRadius: CGFloat {
+        switch self {
+        case .left:
+            return .zero
+
+            case .right:
+                return 8.0
+        }
+    }
+
+    // 右端の角丸の設定
+    var trailingCornerRadius: CGFloat {
+        switch self {
+        case .left:
+            return 8.0
+
+        case .right:
+            return .zero
+        }
+    }
+}
+
+```
 
 
 ## おわりに
