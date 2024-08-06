@@ -35,7 +35,7 @@ https://github.com/MilanistaDev/PagingWithButtonActionsOnly
 
 動作イメージは下記の GIF のような感じ。
 
-
+![tab_paging_result](https://github.com/user-attachments/assets/0abf5185-71ad-428c-940c-11fd19c9f523)
 
 ### 仕様
 
@@ -314,6 +314,18 @@ struct TabPagingView: View {
     }
 }
 ```
+
+これで実行するとページ切り替えボタンでのページングが実現できています。
+加えて，まだスワイプによるページングもまた可能なままです。
+
+![tab_paging](https://github.com/user-attachments/assets/3440b1dd-5648-4da5-9948-cf41df1aaeb5)
+
+次にスワイプによるページングをできなくします。
+
+
+
+![tab_paging_fixed](https://github.com/user-attachments/assets/ef949cb2-8844-466e-b1b3-78e42ed8e730)
+
 
 ## おわりに
 
