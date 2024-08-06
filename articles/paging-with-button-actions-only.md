@@ -224,6 +224,96 @@ enum PageSwitchingButtonType: CaseIterable {
 
 ```
 
+ボタン本体の実装は下記の通りです。
+左ボタンか右ボタンかで表示の違いがあるので
+`PageSwitchingButtonType` を引数としてもらって実装し分けています。
+
+```swift:PageSwitchingButton.swift
+struct PageSwitchingButton: View {
+    let content: Contents
+    let type: PageSwitchingButtonType
+    var onTap: (() -> Void)?
+
+    var body: some View {
+        Button {
+            onTap?()
+        } label: {
+            HStack(spacing: 8.0) {
+                if type == .left {
+                    Image(systemName: type.edgeIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16.0, height: 16.0)
+                }
+
+                Text(content.pageName)
+                    .font(.headline)
+
+                if type == .right {
+                    Image(systemName: type.edgeIcon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16.0, height: 16.0)
+                }
+            }
+            .padding(.leading, type.leadingMargin)
+            .padding(.trailing, type.trailingMargin)
+            .frame(height: 32.0)
+            .foregroundColor(Color.init(hex: content.textColor))
+            .background(Color.init(hex: content.backColor))
+            .clipShape(
+                .rect(
+                    topLeadingRadius: type.leadingCornerRadius,
+                    bottomLeadingRadius: type.leadingCornerRadius,
+                    bottomTrailingRadius: type.trailingCornerRadius,
+                    topTrailingRadius: type.trailingCornerRadius
+                )
+            )
+            .compositingGroup()
+            .shadow(color: .black.opacity(0.6), radius: 2.0, x: 0.0, y: 0.0)
+        }
+    }
+}
+```
+
+コンテンツの上にページ切り替えボタンを表示させます。
+`ZStack` でもいいですがネスト深くなるので
+今回は `overlay` モディファイアを使うことにします。
+
+
+```diff swift:TabPagingView.swift
+struct TabPagingView: View {
+    @StateObject private var viewModel = TabPagingViewModel()
+    @State private var selection = 0
+
+    var body: some View {
+        TabView(selection: $selection) {
+            ForEach(viewModel.contents.indices, id: \.self) { index in
+                ContentView(data: viewModel.contents[index].columns)
+                    .tag(index)
+                    .ignoresSafeArea()
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .edgesIgnoringSafeArea(.top)
++        .overlay(alignment: .top) {
++            PageSwitchingButtons(
++                contents: viewModel.contents,
++                selection: $selection
++            )
++            .padding(.top, 20.0)
++        }
+        .overlay {
+            if viewModel.isLoading {
+                ProgressView()
+            }
+        }
+        .onAppear {
+            viewModel.onAppear()
+        }
+    }
+}
+```
 
 ## おわりに
 
