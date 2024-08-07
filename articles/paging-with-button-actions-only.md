@@ -23,6 +23,15 @@ published: false
 `TabView` 使う想定のままなんとかいけそうか，
 できないなら代替案を考えようということで調査に取り掛かった。
 
+## 結論
+
+`PageTabViewStyle` の `TabView` を使う。
+ただし，ドラッグ/スワイプでページングができてしまうため，
+ドラッグジェスチャーを各ページのコンテンツのビューに付与し，
+子ビュー側のドラッグジェスチャーを優先させる。
+
+`.gesture(DragGesture())`
+
 ## 仕様とサンプルアプリ
 
 今回のサンプルアプリの GitHub は下記です。
@@ -86,6 +95,8 @@ let sampleContents: [Contents] = [
 
 ## 実装
 
+### ViewModel 実装
+
 ViewModel 側でデータ取得の処理を行う。
 非同期を意識して 3s の遅延を入れた。
 待つ間 `isLoading` が `true` になる。
@@ -114,6 +125,8 @@ final class TabPagingViewModel: ObservableObject {
     }
 }
 ```
+
+### TabView によるページング仮実装
 
 View 側の実装は下記のような感じ。
 一旦通常通りスワイプでページングできるようにしておく。
@@ -146,6 +159,8 @@ struct TabPagingView: View {
     }
 }
 ```
+
+### ページ切り替えボタン実装
 
 次にページ切り替え用のボタンの実装をします。
 左右のボタンの設定のための enum を定義しておきます。
@@ -320,6 +335,8 @@ struct TabPagingView: View {
 
 ![tab_paging](https://github.com/user-attachments/assets/3440b1dd-5648-4da5-9948-cf41df1aaeb5)
 
+### TabView のページングをなくす
+
 次にスワイプによるページングをできなくします。
 親ビューより子ビューのジェスチャーが優先される仕組みを使って，
 ページのコンテンツビューに `DragGesture` を付与して
@@ -382,6 +399,80 @@ print 文の出力があることがわかります。
         })
 )
 ```
+
+## 他に考えた案
+
+今回はあっさり実現できたが，頭にあった案を軽く書いてみます。
+
+### `ScrollViewReader` 使う案
+
+`ScrollViewReader` をラップして，
+`scrollDisabled(true)` でスクロールできなくして，
+`scrollTo()` で次のコンテンツにスクロールさせる案。
+
+サンプルアプリの2番目のタブに実装しました。
+
+```swift:ScrollViewReaderPagingView.swift
+struct ScrollViewReaderPagingView: View {
+    @StateObject private var viewModel = TabPagingViewModel()
+    @State private var selection = 0
+
+    var body: some View {
+        ScrollViewReader { scrollProxy in
+            ScrollView(.horizontal) {
+                HStack(spacing: .zero) {
+                    ForEach(viewModel.contents.indices, id: \.self) { index in
+                        ContentView(data: viewModel.contents[index].columns)
+                            .tag(index)
+                            .frame(width: UIScreen.main.bounds.width) // よくない🤔
+                    }
+                }
+            }
+            .scrollDisabled(true)
+            .onChange(of: selection) { _ in
+                withAnimation {
+                    // selection の値変更を受けて各Index値にスクロールさせる
+                    scrollProxy.scrollTo(selection, anchor: .center)
+                }
+            }
+        }
+        .ignoresSafeArea(edges: [.top])
+        .overlay(alignment: .top) {
+            PageSwitchingButtons(
+                contents: viewModel.contents,
+                selection: $selection
+            )
+            .padding(.top, 20.0)
+        }
+        .overlay {
+            if viewModel.isLoading {
+                ProgressView()
+            }
+        }
+        .onAppear {
+            viewModel.onAppear()
+        }
+    }
+}
+```
+
+これでも良さそうです。
+これだと動きは良いのですが，
+各ページ表示時にスクリーンイベントを取りたいということになり，
+ビュー生成時に一気に呼ばれることから不採用になりました。
+
+### NavigationLink による Push 遷移
+
+左右に動くアニメーションといえば・・・
+NavigationLink を使った Push & Pop な遷移での実現も考えました。
+しかし，親子の関係でもなく用途が違いすぎるためボツになりました。
+
+### 座標をずらすパターン
+
+ScrollViewReader だとスワイプもできちゃうと思っていた頃の原始案。
+ページ数分のビューを `HStack` で準備しておき，
+ページ切り替えボタンで `画面幅 * index` で座標をずらして
+無理やり表示させる原始的な実装です。
 
 ## おわりに
 
