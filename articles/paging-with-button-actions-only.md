@@ -296,13 +296,13 @@ struct TabPagingView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .edgesIgnoringSafeArea(.top)
-+        .overlay(alignment: .top) {
-+            PageSwitchingButtons(
-+                contents: viewModel.contents,
-+                selection: $selection
-+            )
-+            .padding(.top, 20.0)
-+        }
++       .overlay(alignment: .top) {
++           PageSwitchingButtons(
++               contents: viewModel.contents,
++               selection: $selection
++           )
++           .padding(.top, 20.0)
++       }
         .overlay {
             if viewModel.isLoading {
                 ProgressView()
@@ -321,11 +321,67 @@ struct TabPagingView: View {
 ![tab_paging](https://github.com/user-attachments/assets/3440b1dd-5648-4da5-9948-cf41df1aaeb5)
 
 次にスワイプによるページングをできなくします。
+親ビューより子ビューのジェスチャーが優先される仕組みを使って，
+ページのコンテンツビューに `DragGesture` を付与して
+その `DragGesture` では結局何もしないという形で実現します。
+`TabView` のページングよりコンテンツの `DragGesture` が優先され，
+`TabView` のページングがキャンセルされるといった感じ(認識)です。
+(認識違ってたらご指摘いただけると嬉しいです🙇)
 
+↓`DragGesture` を `ContentView` (各ページのビュー)に対して追加しています。
 
+```diff swift:TabPagingView.swift
+struct TabPagingView: View {
+    @StateObject private var viewModel = TabPagingViewModel()
+    @State private var selection = 0
+
+    var body: some View {
+        TabView(selection: $selection) {
+            ForEach(viewModel.contents.indices, id: \.self) { index in
+                ContentView(data: viewModel.contents[index].columns)
+                    .tag(index)
++                   .gesture(DragGesture())
+                    .ignoresSafeArea()
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .edgesIgnoringSafeArea(.top)
+        .overlay(alignment: .top) {
+            PageSwitchingButtons(
+                contents: viewModel.contents,
+                selection: $selection
+            )
+            .padding(.top, 20.0)
+        }
+        .overlay {
+            if viewModel.isLoading {
+                ProgressView()
+            }
+        }
+        .onAppear {
+            viewModel.onAppear()
+        }
+    }
+}
+```
+
+これで実行するとページ切り替えボタンだけのページングが実現できました。
 
 ![tab_paging_fixed](https://github.com/user-attachments/assets/ef949cb2-8844-466e-b1b3-78e42ed8e730)
 
+
+該当箇所で下記みたいなコード書いてみて，
+コンテンツビュー側をドラッグしてみると
+print 文の出力があることがわかります。
+
+```swift
+.gesture(
+    DragGesture()
+        .onEnded({ _ in
+            print("Dragged ContentView side.")
+        })
+)
+```
 
 ## おわりに
 
