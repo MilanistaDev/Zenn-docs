@@ -3,7 +3,7 @@ title: "[SwiftUI] ボタンアクションのみでページングさせる実�
 emoji: "📱"
 type: "tech" # tech: 技術記事 / idea: アイデア
 topics: ["iOS", "SwiftUI", "Paging"]
-published: false
+published: true
 ---
 
 ## はじめに
@@ -461,13 +461,11 @@ struct ScrollViewReaderPagingView: View {
 各ページ表示時にスクリーンイベントを取りたいということになり，
 ビュー生成時に一気に呼ばれることから不採用になりました。
 
-### NavigationLink による Push 遷移
+### `NavigationLink` による Push/Pop 遷移
 
 左右に動くアニメーションといえば・・・
-NavigationLink を使った Push & Pop な遷移での実現も考えました。
+`NavigationLink` を使った Push & Pop な遷移での実現も考えました。
 しかし，親子の関係でもなく用途が違いすぎるためボツになりました。
-
-コードは省略しますが，サンプルアプリでは Tab3 に実装しました。
 
 ### 座標をずらすパターン
 
